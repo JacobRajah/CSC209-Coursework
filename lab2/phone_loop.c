@@ -23,6 +23,7 @@ int main(){
 		}
 		else{
 			printf("ERROR\n");
+			return 1;
 		}
 
 	} while(status != EOF);
