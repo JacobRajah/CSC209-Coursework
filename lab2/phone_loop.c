@@ -5,12 +5,12 @@ int main(){
 
 	char phone[11];
 	int number;
-	int status = 1;
+	int status = 0;
+	int wrong = 0;
 	
-	scanf("%s\n",phone);
+	scanf("%s %d",phone, &number);
 
-	do{
-		status = scanf("%d", &number);
+	while(status != EOF){
 		
 		if(number == -1){
 			printf("%s\n", phone);
@@ -23,9 +23,14 @@ int main(){
 		}
 		else{
 			printf("ERROR\n");
-			return 1;
+			wrong++;
 		}
-
-	} while(status != EOF);
-	return 0;
+		status = scanf("%d", &number);
+	}
+	if(wrong){
+		return 1;
+	}
+	else{
+		return 0;
+	}
 }
