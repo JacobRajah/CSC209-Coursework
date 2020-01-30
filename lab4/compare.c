@@ -14,3 +14,21 @@
 
   Your main function should return 0, regardless of what is printed.
 */
+int main(int argc, char **argv){
+	
+	if(argc > 3 || argc < 3){
+		printf("Invalid\n");
+		return 0;
+	}
+	
+	int is_same;
+	is_same = strcmp(argv[1],argv[2]);
+	if(is_same == 0){
+		printf("Same\n");
+	}
+	else{
+		printf("Different\n");
+	}
+	return 0;
+
+}

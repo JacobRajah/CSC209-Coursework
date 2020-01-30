@@ -20,7 +20,25 @@
 */
 
 // Write the function strip_q_marks here
+int strip_q_marks(char *s){
+	
+	int count = 0;
+	int i = strlen(s) - 1;
+	char qmark = '?';
 
+	while(i >= 0){
+		char curr = s[i];
+		if(curr == qmark){
+			count++;				
+		}
+		else{
+			s[i + 1] = '\0';
+			return count;
+		}
+		i--;
+	}
+	return count;
+}
 
 int main(int argc, char **argv) {
     // Do not change this main function.
