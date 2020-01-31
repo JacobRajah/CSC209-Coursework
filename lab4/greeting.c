@@ -51,21 +51,25 @@ int main(int argc, char **argv) {
     //set last character to the null terminate
     greeting[19] = '\0';
 
-    int i;
-    for(i = 0; i < length; i++){
-      greeting[i] = greet[i];
-    }
+    // int i;
+    // for(i = 0; i < length; i++){
+    //   greeting[i] = greet[i];
+    // }
+
+    strncpy(greeting,greet,length);
 
 
-    int j = length + 1;
-
-    int name_pos = 0;
-    while(j < 19){
-
-      greeting[j] = name[name_pos];
-      j++;
-      name_pos++;
-    }
+    // int j = length + 1;
+    //
+    // int name_pos = 0;
+    // while(j < 19){
+    //
+    //   greeting[j] = name[name_pos];
+    //   j++;
+    //   name_pos++;
+    // }
+    int v = 19 - strlen(greeting);
+    strncat(greeting,name,v);
 
     printf("%s\n", greeting);
     return 0;
