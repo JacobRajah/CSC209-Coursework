@@ -37,7 +37,14 @@ int main(int argc, char **argv) {
         }
     }
 
-    // Clean up: you need to do this!
+    int error;
+    error = fclose(image);
+    if(error != 0){
+      fprintf(stderr, "ERROR CLOSING FILE\n");
+      return 1;
+    }
+
+    free(pixels);
 
     return 0;
 }
