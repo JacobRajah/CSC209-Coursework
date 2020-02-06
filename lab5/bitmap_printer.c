@@ -44,6 +44,10 @@ int main(int argc, char **argv) {
       return 1;
     }
 
+    for(int m = 0; m < height; m++){
+      free(pixels[m]);
+    }
+
     free(pixels);
 
     return 0;
