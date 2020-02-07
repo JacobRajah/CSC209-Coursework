@@ -84,10 +84,10 @@ struct TreeNode *build_tree(const char *fname, char *path){
       return NULL;
     }
     //read and store information about first file in dir according to read dir
-    struct dirent *current;
+    struct dirent *current = NULL;
     current = find_next_file(d_ptr);
 
-    struct dirent *next;
+    struct dirent *next = NULL;
     //path modified so that the name of a file can be added to the end of the path
     strcat(full_path,"/");
     struct TreeNode *currentTree = NULL;
