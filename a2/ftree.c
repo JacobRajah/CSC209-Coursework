@@ -94,29 +94,30 @@ struct TreeNode *build_tree(const char *fname, char *path){
 
     if(current != NULL){
       currentTree = build_tree(current->d_name,full_path);
+      dir->contents = currentTree;
     }
     //while loop goes through each file in the directory and recursively connects
     //each file.
     while (current != NULL) {
 
       //connect first file to the directory Tree contents
-      if(dir->contents == NULL){
-        dir->contents = currentTree;
-        //printf("Set content success\n");
-      }
+      // if(dir->contents == NULL){
+      //   dir->contents = currentTree;
+      //   //printf("Set content success\n");
+      // }
       //After directory tree contents has been set, start conecting the rest
       //of the files in the directory using the structs 'next' value.
-      else{
+
         //printf("add node\n");
-        next = find_next_file(d_ptr);
-        //printf("%s\n",path);
-        if(next != NULL){
-          struct TreeNode *nextTree = build_tree(next->d_name,full_path);
-          currentTree->next = nextTree;
-          currentTree = nextTree;
-        }
-        current = next;
+      next = find_next_file(d_ptr);
+      //printf("%s\n",path);
+      if(next != NULL){
+        struct TreeNode *nextTree = build_tree(next->d_name,full_path);
+        currentTree->next = nextTree;
+        currentTree = nextTree;
       }
+      current = next;
+
     }
     closedir(d_ptr);
     return dir;
