@@ -248,6 +248,7 @@ void deallocate_ftree (struct TreeNode *node) {
        i = 0;
        curr = node->contents;
      }
+     deallocate_ftree(curr);
      free(node->fname);
      free(node);
 
