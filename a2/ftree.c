@@ -37,7 +37,7 @@ struct TreeNode *build_tree(const char *fname, char *path){
   strcat(full_path,fname);
 
   //make the file name a char * type in order to assign to tree struct
-  char *name = malloc(sizeof(char)*strlen(fname));
+  char *name = malloc(sizeof(char)*(strlen(fname)+1));
   strcpy(name,fname);
 
   struct stat curr_file;
