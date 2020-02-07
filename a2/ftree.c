@@ -54,6 +54,8 @@ struct TreeNode *build_tree(const char *fname, char *path){
     reg_file->fname = name;
     reg_file->permissions = curr_file.st_mode & 0777;
     reg_file->type = '-';
+    reg_file->contents = NULL;
+    reg_file->next = NULL;
 
     return reg_file;
   }
@@ -65,6 +67,8 @@ struct TreeNode *build_tree(const char *fname, char *path){
     link_file->fname = name;
     link_file->permissions = curr_file.st_mode & 0777;
     link_file->type = 'l';
+    link_file->contents = NULL;
+    link_file->next = NULL;
 
     return link_file;
   }
@@ -77,6 +81,8 @@ struct TreeNode *build_tree(const char *fname, char *path){
     dir->fname = name;
     dir->permissions = curr_file.st_mode & 0777;
     dir->type = 'd';
+    dir->contents = NULL;
+    dir->next = NULL;
     //prepare to access files in dir
     DIR *d_ptr = opendir(full_path);
     if(d_ptr == NULL){
@@ -91,7 +97,6 @@ struct TreeNode *build_tree(const char *fname, char *path){
     //path modified so that the name of a file can be added to the end of the path
     strcat(full_path,"/");
     struct TreeNode *currentTree = NULL;
-    dir->contents = NULL;
 
     if(current != NULL){
       currentTree = build_tree(current->d_name,full_path);
@@ -114,7 +119,6 @@ struct TreeNode *build_tree(const char *fname, char *path){
       //printf("%s\n",path);
       if(next != NULL){
         struct TreeNode *nextTree = build_tree(next->d_name,full_path);
-        currentTree->next = NULL;
         currentTree->next = nextTree;
         currentTree = nextTree;
       }
@@ -216,7 +220,7 @@ void deallocate_ftree (struct TreeNode *node) {
    else{
 
      struct TreeNode *curr = node->contents;
-     
+
      //end represents the length of the contents linked list
      int end  = 0;
 
