@@ -106,17 +106,7 @@ struct TreeNode *build_tree(const char *fname, char *path){
     //each file.
     while (current != NULL) {
 
-      //connect first file to the directory Tree contents
-      // if(dir->contents == NULL){
-      //   dir->contents = currentTree;
-      //   //printf("Set content success\n");
-      // }
-      //After directory tree contents has been set, start conecting the rest
-      //of the files in the directory using the structs 'next' value.
-
-        //printf("add node\n");
       next = find_next_file(d_ptr);
-      //printf("%s\n",path);
       if(next != NULL){
         struct TreeNode *nextTree = build_tree(next->d_name,full_path);
         currentTree->next = nextTree;
@@ -131,7 +121,6 @@ struct TreeNode *build_tree(const char *fname, char *path){
   return NULL;
 }
 
-
 /*
  * Returns the FTree rooted at the path fname.
  *
@@ -141,7 +130,6 @@ struct TreeNode *build_tree(const char *fname, char *path){
  */
 struct TreeNode *generate_ftree(const char *fname) {
 
-    // Your implementation here.
     struct stat curr_file;
 
     if(lstat(fname,&curr_file) == -1){
@@ -149,19 +137,9 @@ struct TreeNode *generate_ftree(const char *fname) {
       return NULL;
     }
 
-    // char name[80];
-    // strcpy(name,fname);
-
     char path[200] = "";
 
     struct TreeNode *root = build_tree(fname,path);
-
-
-    // Hint: consider implementing a recursive helper function that
-    // takes fname and a path.  For the initial call on the
-    // helper function, the path would be "", since fname is the root
-    // of the FTree.  For files at other depths, the path would be the
-    // file path from the root to that file.
 
     return root;
 }
@@ -169,23 +147,19 @@ struct TreeNode *generate_ftree(const char *fname) {
 
 /*
  * Prints the TreeNodes encountered on a preorder traversal of an FTree.
- *
- * The only print statements that you may use in this function are:
- * printf("===== %s (%c%o) =====\n", root->fname, root->type, root->permissions)
- * printf("%s (%c%o)\n", root->fname, root->type, root->permissions)
- *
  */
 void print_ftree(struct TreeNode *root) {
 
-    // Here's a trick for remembering what depth (in the tree) you're at
-    // and printing 2 * that many spaces at the beginning of the line.
+    //Keep track of the depth of the tree
     static int depth = 0;
-    //printf("%*s", depth * 2, "");
-    // Your implementation here.
+    //If the root is a file or linked then print the file information at depth specified
     if(root->type == '-' || root->type == 'l'){
       printf("%*s", depth * 2, "");
       printf("%s (%c%o)\n", root->fname, root->type, root->permissions);
     }
+    //If the root is a directory, print the directory name and information
+    //Then recusively go through data in the directory and print the data at a depth
+    //increased by 1
     else{
       printf("%*s", depth * 2, "");
       printf("===== %s (%c%o) =====\n", root->fname, root->type, root->permissions);
@@ -197,52 +171,48 @@ void print_ftree(struct TreeNode *root) {
         print_ftree(temporary);
         temporary = temporary->next;
       }
+      //after printing values in the directory, reduce the depth so that indentation
+      //returns to what it was prior to evalutating directory.
       depth--;
-
     }
-
 }
-
 
 /*
  * Deallocate all dynamically-allocated memory in the FTree rooted at node.
  *
  */
 void deallocate_ftree (struct TreeNode *node) {
-
-   // Your implementation here.
-   //make sure to free fname
-   //printf("I'm Here 1\n");
+    //If the node is a linked or regular file, simply free the TreeNode name
+    //and then the Node
    if(node->type == '-' || node -> type == 'l'){
      free(node->fname);
      free(node);
    }
    else{
-
+     //if directory then find the last node in the directory and free the Node
+     //then traverse backwards freeing each node.
      struct TreeNode *curr = node->contents;
-
-     //end represents the length of the contents linked list
+     //end represents the length of the contents linked list - 1
      int end  = 0;
-
      while(curr != NULL){
        curr = curr->next;
        if(curr != NULL){
          end++;
        }
      }
-
      //set to first value in the list
      curr = node->contents;
      int i = 0;
 
      while(end > 0){
-
+       //find last node that hasnt been freed
        while(i < end && curr != NULL){
          curr = curr->next;
          i++;
        }
-
+       //free the memory
        deallocate_ftree(curr);
+       //set the last node that hasnt been freed to end = end - 1
        end--;
        //reset values
        i = 0;
@@ -251,7 +221,5 @@ void deallocate_ftree (struct TreeNode *node) {
      deallocate_ftree(curr);
      free(node->fname);
      free(node);
-
   }
-
 }
