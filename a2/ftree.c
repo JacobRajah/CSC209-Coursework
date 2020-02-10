@@ -11,6 +11,13 @@
 
 #include "ftree.h"
 
+void check_mallocs(struct TreeNode *node){
+  if(node == NULL){
+    fprintf(stderr, "Error mallocing\n");
+    exit(1);
+  }
+}
+
 void make_node(struct TreeNode *node, int permissions, char type, char *name){
   node->fname = name;
   node->permissions = permissions;
@@ -60,13 +67,15 @@ struct TreeNode *build_tree(const char *fname, char *path){
   struct stat curr_file;
   if(lstat(full_path,&curr_file) == -1){
     printf("Error finding file%s\n",full_path);
-    return NULL;
+    exit(1);
   }
 
   if(S_ISREG(curr_file.st_mode)){
     //regular file
     struct TreeNode *reg_file;
     reg_file = malloc(sizeof(struct TreeNode));
+    //checking to ensure malloc is successful
+    check_mallocs(reg_file);
     //set values retrieved from lstat
     make_node(reg_file, (curr_file.st_mode & 0777), '-', name);
     return reg_file;
@@ -75,24 +84,27 @@ struct TreeNode *build_tree(const char *fname, char *path){
     //link file
     struct TreeNode *link_file;
     link_file = malloc(sizeof(struct TreeNode));
+    //checking to ensure malloc is successful
+    check_mallocs(link_file);
     //set values retrieved from lstat
     make_node(link_file, (curr_file.st_mode & 0777), 'l', name);
     return link_file;
   }
   else if(S_ISDIR(curr_file.st_mode)){
-
     //directory.. want to list all items in dir and recursively go through
     struct TreeNode *dir;
     dir = malloc(sizeof(struct TreeNode));
+    //checking to ensure malloc is successful
+    check_mallocs(dir);
     //set values retrieved from lstat
     make_node(dir, (curr_file.st_mode & 0777), 'd', name);
     //prepare to access files in dir
     DIR *d_ptr = opendir(full_path);
     if(d_ptr == NULL){
       fprintf(stderr, "Error opening dir\n");
-      return NULL;
+      exit(1);
     }
-    //read and store information about first file in dir according to read dir
+    //find the next file in the directory that isnt '.' '..' or '.DS_Store'
     struct dirent *current = NULL;
     current = find_next_file(d_ptr);
 
@@ -120,7 +132,7 @@ struct TreeNode *build_tree(const char *fname, char *path){
     }
     if(closedir(d_ptr) != 0){
       printf("Unable to close the directory");
-      return NULL;
+      exit(1);
     }
     return dir;
   }
@@ -142,11 +154,8 @@ struct TreeNode *generate_ftree(const char *fname) {
       fprintf(stderr, "The path (%s) does not point to an existing entry!\n", fname);
       return NULL;
     }
-
     char path[200] = "";
-
     struct TreeNode *root = build_tree(fname,path);
-
     return root;
 }
 
