@@ -11,6 +11,18 @@
 
 #include "ftree.h"
 
+void make_node(struct TreeNode *node, int permissions, char type, char *name){
+  node->fname = name;
+  node->permissions = permissions;
+  node->type = type;
+  node->contents = NULL;
+  node->next = NULL;
+}
+/*
+ * Returns a struct dirent containing information about the next elegible file
+ *
+ *
+ */
 struct dirent *find_next_file(DIR *directory){
 
   struct dirent *temp;
@@ -27,7 +39,12 @@ struct dirent *find_next_file(DIR *directory){
   return temp;
 }
 
-
+/*
+ * Returns the FTree root
+ *
+ * This function takes a root TreeNode and recursively assigns the contents and
+ * next value. The order in which the Tree is built mimics the output of readdir
+ */
 struct TreeNode *build_tree(const char *fname, char *path){
 
   //get proper PATH.. ex: concatenate "" and mydir for the first dynamically
@@ -51,12 +68,7 @@ struct TreeNode *build_tree(const char *fname, char *path){
     struct TreeNode *reg_file;
     reg_file = malloc(sizeof(struct TreeNode));
     //set values retrieved from lstat
-    reg_file->fname = name;
-    reg_file->permissions = curr_file.st_mode & 0777;
-    reg_file->type = '-';
-    reg_file->contents = NULL;
-    reg_file->next = NULL;
-
+    make_node(reg_file, (curr_file.st_mode & 0777), '-', name);
     return reg_file;
   }
   else if(S_ISLNK(curr_file.st_mode)){
@@ -64,12 +76,7 @@ struct TreeNode *build_tree(const char *fname, char *path){
     struct TreeNode *link_file;
     link_file = malloc(sizeof(struct TreeNode));
     //set values retrieved from lstat
-    link_file->fname = name;
-    link_file->permissions = curr_file.st_mode & 0777;
-    link_file->type = 'l';
-    link_file->contents = NULL;
-    link_file->next = NULL;
-
+    make_node(link_file, (curr_file.st_mode & 0777), 'l', name);
     return link_file;
   }
   else if(S_ISDIR(curr_file.st_mode)){
@@ -78,11 +85,7 @@ struct TreeNode *build_tree(const char *fname, char *path){
     struct TreeNode *dir;
     dir = malloc(sizeof(struct TreeNode));
     //set values retrieved from lstat
-    dir->fname = name;
-    dir->permissions = curr_file.st_mode & 0777;
-    dir->type = 'd';
-    dir->contents = NULL;
-    dir->next = NULL;
+    make_node(dir, (curr_file.st_mode & 0777), 'd', name);
     //prepare to access files in dir
     DIR *d_ptr = opendir(full_path);
     if(d_ptr == NULL){
@@ -94,9 +97,9 @@ struct TreeNode *build_tree(const char *fname, char *path){
     current = find_next_file(d_ptr);
 
     struct dirent *next = NULL;
+    struct TreeNode *currentTree = NULL;
     //path modified so that the name of a file can be added to the end of the path
     strcat(full_path,"/");
-    struct TreeNode *currentTree = NULL;
 
     if(current != NULL){
       currentTree = build_tree(current->d_name,full_path);
@@ -115,7 +118,10 @@ struct TreeNode *build_tree(const char *fname, char *path){
       current = next;
 
     }
-    closedir(d_ptr);
+    if(closedir(d_ptr) != 0){
+      printf("Unable to close the directory");
+      return NULL;
+    }
     return dir;
   }
   return NULL;
