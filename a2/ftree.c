@@ -27,7 +27,8 @@ void make_node(struct TreeNode *node, int permissions, char type, char *name){
 }
 /*
  * Returns a struct dirent containing information about the next elegible file
- *
+ *strcmp((temp->d_name),".") != 0 && strcmp((temp->d_name),"..") != 0 &&
+  strcmp((temp->d_name),".DS_Store") != 0
  *
  */
 struct dirent *find_next_file(DIR *directory){
@@ -37,8 +38,7 @@ struct dirent *find_next_file(DIR *directory){
 
   while(temp != NULL){
 
-    if (strcmp((temp->d_name),".") != 0 && strcmp((temp->d_name),"..") != 0 &&
-     strcmp((temp->d_name),".DS_Store") != 0) {
+    if ((temp->d_name)[0] != '.') {
       return temp;
     }
     temp = readdir(directory);
