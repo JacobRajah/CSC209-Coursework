@@ -213,37 +213,39 @@ void deallocate_ftree (struct TreeNode *node) {
        //empty dir
        free(node->fname);
        free(node);
-       return;
      }
-     struct TreeNode *curr = node->contents;
-     //end represents the length of the contents linked list - 1
-     int end  = 0;
-     while(curr != NULL){
-       curr = curr->next;
-       if(curr != NULL){
-         end++;
-       }
-     }
-     //set to first value in the list
-     curr = node->contents;
-     int i = 0;
-
-     while(end > 0){
-       //find last node that hasnt been freed
-       while(i < end && curr != NULL){
+     else{
+       struct TreeNode *curr = node->contents;
+       //end represents the length of the contents linked list - 1
+       int end  = 0;
+       while(curr != NULL){
          curr = curr->next;
-         i++;
+         if(curr != NULL){
+           end++;
+         }
        }
-       //free the memory
-       deallocate_ftree(curr);
-       //set the last node that hasnt been freed to end = end - 1
-       end--;
-       //reset values
-       i = 0;
+       //set to first value in the list
        curr = node->contents;
-     }
-     deallocate_ftree(curr);
-     free(node->fname);
-     free(node);
+       int i = 0;
+
+       while(end > 0){
+         //find last node that hasnt been freed
+         while(i < end && curr != NULL){
+           curr = curr->next;
+           i++;
+         }
+         //free the memory
+         deallocate_ftree(curr);
+         //set the last node that hasnt been freed to end = end - 1
+         end--;
+         //reset values
+         i = 0;
+         curr = node->contents;
+       }
+       deallocate_ftree(curr);
+       free(node->fname);
+       free(node);
+     } //end else "contents isnt null"
+
   }
 }
