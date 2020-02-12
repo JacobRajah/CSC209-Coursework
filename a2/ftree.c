@@ -34,8 +34,6 @@ void make_node(struct TreeNode *node, int permissions, char type, char *name){
 }
 /*
  * Returns a struct dirent containing information about the next elegible file
- *strcmp((temp->d_name),".") != 0 && strcmp((temp->d_name),"..") != 0 &&
-  strcmp((temp->d_name),".DS_Store") != 0
  *
  */
 struct dirent *find_next_file(DIR *directory){
@@ -211,6 +209,12 @@ void deallocate_ftree (struct TreeNode *node) {
    else{
      //if directory then find the last node in the directory and free the Node
      //then traverse backwards freeing each node.
+     if(node->contents == NULL){
+       //empty dir
+       free(node->fname);
+       free(node);
+       return;
+     }
      struct TreeNode *curr = node->contents;
      //end represents the length of the contents linked list - 1
      int end  = 0;
