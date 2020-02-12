@@ -56,7 +56,7 @@ struct TreeNode *build_tree(const char *fname, char *path){
 
   //get proper PATH.. ex: concatenate "" and mydir for the first dynamically
   //then it may be ex2: "mydir/fname"
-  char full_path[80];
+  char full_path[strlen(path)+strlen(fname)+2];
   strcpy(full_path,path);
   strcat(full_path,fname);
 
