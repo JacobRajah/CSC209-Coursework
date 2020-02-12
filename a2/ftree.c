@@ -210,7 +210,10 @@ void deallocate_ftree (struct TreeNode *node) {
      //if directory then find the last node in the directory and free the Node
      //then traverse backwards freeing each node.
 
-     struct TreeNode *curr = node->contents;
+     struct TreeNode *curr = NULL;
+     if(node->contents != NULL){
+       curr = node->contents;
+     }
      //end represents the length of the contents linked list - 1
      int end  = 0;
      while(curr != NULL){
