@@ -11,6 +11,9 @@
 
 #include "ftree.h"
 
+/*
+*Function checks to ensure that the malloc was successful, if not then exit
+*/
 void check_mallocs(struct TreeNode *node){
   if(node == NULL){
     fprintf(stderr, "Error mallocing\n");
@@ -18,6 +21,10 @@ void check_mallocs(struct TreeNode *node){
   }
 }
 
+/*
+*Function takes a TreeNode and assigns its values based on the paramteters passed
+*into the function. This includes setting permission, type and name
+*/
 void make_node(struct TreeNode *node, int permissions, char type, char *name){
   node->fname = name;
   node->permissions = permissions;
@@ -149,16 +156,14 @@ struct TreeNode *build_tree(const char *fname, char *path){
 struct TreeNode *generate_ftree(const char *fname) {
 
     struct stat curr_file;
-
+    //check to ensure that the file name is existent
     if(lstat(fname,&curr_file) == -1){
       fprintf(stderr, "The path (%s) does not point to an existing entry!\n", fname);
       return NULL;
     }
-    char path[200] = "";
-    struct TreeNode *root = build_tree(fname,path);
+    struct TreeNode *root = build_tree(fname,"");
     return root;
 }
-
 
 /*
  * Prints the TreeNodes encountered on a preorder traversal of an FTree.
