@@ -13,7 +13,21 @@
 
 char *copy(char *dest, const char *src, int capacity) {
 
+    int i;
+    int status = 0;
 
+    for(i = 0; i < capacity-1; i++){
+        if((status == 0) && src[i] != '\0'){
+          //dest[i] = src[i];
+          memset(&dest[i],src[i],sizeof(char));
+        }
+        else{
+          status = 1;
+          //dest[i] = '\0';
+          memset(&dest[i],'\0',sizeof(char));
+        }
+    }
+    dest[capacity-1] = '\0';
     return dest;
 }
 
