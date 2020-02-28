@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
             exit(1);
         }
         printf("ppid = %d, pid = %d, i = %d\n", getppid(), getpid(), i);
-
+        //if parent then it will not be = to 0
         if(n != 0){
           exit(1);
         }

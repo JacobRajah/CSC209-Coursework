@@ -15,14 +15,16 @@ int main(int argc, char **argv) {
 
     for (i = 0; i < iterations; i++) {
         int n = fork();
-        if(n == 0){
-          exit(1);
-        }
+
         if (n < 0) {
             perror("fork");
             exit(1);
         }
         printf("ppid = %d, pid = %d, i = %d\n", getppid(), getpid(), i);
+
+        if(n == 0){
+          exit(1);
+        }
     }
 
     return 0;
