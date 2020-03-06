@@ -67,7 +67,7 @@ int main(void) {
       exit(1);
     }
 
-    execl("./validate", "validate");
+    execl("./validate", "validate", NULL);
     //will only reach if error
     perror("exec");
 
