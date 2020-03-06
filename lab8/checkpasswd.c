@@ -68,8 +68,6 @@ int main(void) {
     }
 
     execl("./validate", "validate", NULL);
-    //will only reach if error
-    perror("exec");
 
   }
   //parent
