@@ -46,7 +46,7 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
             perror("close read");
             exit(1);
         }
-        if(write(fd1[1],left_closest, sizeof(double)) == -1){
+        if(write(fd1[1],left_closest, sizeof(left_closest)) == -1){
             perror("write");
             exit(1);
         }
@@ -77,7 +77,7 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
             perror("close read");
             exit(1);
         }
-        if(write(fd2[1],right_closest, sizeof(double)) == -1){
+        if(write(fd2[1],right_closest, sizeof(right_closest)) == -1){
             perror("write");
             exit(1);
         }
@@ -88,57 +88,59 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
         exit(1 + *pcount);
     }
 
-    if(close(fd1[1]) == -1 || close(fd2[1]) == -1){
-        perror("close read");
-        exit(1);
-    }
-    int left_min, right_min;
+    if(fd1 > 0 || fd2 > 0){
+        if(close(fd1[1]) == -1 || close(fd2[1]) == -1){
+            perror("close read");
+            exit(1);
+        }
+        double left_min, right_min;
 
-    int status;
-    for(int i = 0; i < 2; i++){
-        if(wait(&status) == -1){
-            perror("wait");
+        int status;
+        for(int i = 0; i < 2; i++){
+            if(wait(&status) == -1){
+                perror("wait");
+                exit(1);
+            }
+
+            if(WIFEXITED(status)){
+                *pcount += WEXITSTATUS(status);
+                if(i == 0){
+                    if(read(fd1[0],&left_min, sizeof(left_min)) != sizeof(left_min)){
+                        perror("read child 1");
+                        exit(1);
+                    }
+                }
+                else{
+                    if(read(fd2[0],&right_min, sizeof(left_min)) != sizeof(left_min)){
+                        perror("read child 2");
+                        exit(1);
+                    }
+                }
+            }
+        }
+
+        // Find the smaller of two distances
+        double d = min(left_min, right_min);
+
+        // Build an array strip[] that contains points close (closer than d) to the line passing through the middle point.
+        struct Point *strip = malloc(sizeof(struct Point) * n);
+        if (strip == NULL) {
+            perror("malloc");
             exit(1);
         }
 
-        if(WIFEXITED(status)){
-            *pcount += WEXITSTATUS(status);
-            if(i == 0){
-                if(read(fd1[0],&left_min, sizeof(double)) != sizeof(double)){
-                    perror("read child 1");
-                    exit(1);
-                }
-            }
-            else{
-                if(read(fd2[0],&right_min, sizeof(double)) != sizeof(double)){
-                    perror("read child 2");
-                    exit(1);
-                }
+        int j = 0;
+        for (int i = 0; i < n; i++) {
+            if (abs(p[i].x - mid_point.x) < d) {
+                strip[j] = p[i], j++;
             }
         }
+
+        // Find the closest points in strip.  Return the minimum of d and closest distance in strip[].
+        double new_min = min(d, strip_closest(strip, j, d));
+        free(strip);
+
+        return new_min;
     }
-
-    // Find the smaller of two distances
-    double d = min(left_min, right_min);
-
-    // Build an array strip[] that contains points close (closer than d) to the line passing through the middle point.
-    struct Point *strip = malloc(sizeof(struct Point) * n);
-    if (strip == NULL) {
-        perror("malloc");
-        exit(1);
-    }
-
-    int j = 0;
-    for (int i = 0; i < n; i++) {
-        if (abs(p[i].x - mid_point.x) < d) {
-            strip[j] = p[i], j++;
-        }
-    }
-
-    // Find the closest points in strip.  Return the minimum of d and closest distance in strip[].
-    double new_min = min(d, strip_closest(strip, j, d));
-    free(strip);
-
-    return new_min;
-
+    return 0.0;
 }
