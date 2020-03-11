@@ -40,13 +40,12 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
 
     if(f1 == 0){
 
-        double *left_closest =  malloc(sizeof(double));
-        *left_closest = closest_parallel(p, mid, pdmax, pcount);
+        double left_closest = closest_parallel(p, mid, pdmax, pcount);
         if(close(fd1[0]) == -1){
             perror("close read");
             exit(1);
         }
-        if(write(fd1[1],left_closest, sizeof(left_closest)) == -1){
+        if(write(fd1[1],&left_closest, sizeof(left_closest)) == -1){
             perror("write");
             exit(1);
         }
@@ -71,13 +70,12 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
 
     if(f2 == 0){
 
-        double *right_closest =  malloc(sizeof(double));
-        *right_closest = closest_parallel(p + mid, n - mid, pdmax, pcount);
+        double right_closest =  closest_parallel(p + mid, n - mid, pdmax, pcount);
         if(close(fd2[0]) == -1){
             perror("close read");
             exit(1);
         }
-        if(write(fd2[1],right_closest, sizeof(right_closest)) == -1){
+        if(write(fd2[1],&right_closest, sizeof(right_closest)) == -1){
             perror("write");
             exit(1);
         }
