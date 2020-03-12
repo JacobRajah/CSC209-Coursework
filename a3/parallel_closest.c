@@ -41,6 +41,26 @@ void Pipe(int *fd) {
     }
 }
 
+void Close(int file){
+    if(close(file) == -1){
+        perror("close");
+        exit(1);
+    }
+}
+void Read(int file, double *distance_read){
+    if(read(file, distance_read, sizeof(*distance_read)) != sizeof(*distance_read)){
+        perror("read child");
+        exit(1);
+    }
+}
+
+void Write(int file, double *distance_write){
+    if(write(file, distance_write, sizeof(*distance_write)) != sizeof(*distance_write)){
+        perror("write child");
+        exit(1);
+    }
+}
+
 /*
  * Multi-process (parallel) implementation of the recursive divide-and-conquer
  * algorithm to find the minimal distance between any two pair of points in p[].
@@ -65,18 +85,13 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
     if(f1 == 0){
 
         double left_closest = closest_parallel(p, mid, pdmax, pcount);
-        if(close(fd[0][0]) == -1){
-            perror("close read");
-            exit(1);
-        }
-        if(write(fd[0][1],&left_closest, sizeof(left_closest)) == -1){
-            perror("write");
-            exit(1);
-        }
-        if(close(fd[0][1]) == -1){
-            perror("close write");
-            exit(1);
-        }
+
+        Close(fd[0][0]);
+
+        Write(fd[0][1], &left_closest);
+
+        Close(fd[0][1]);
+
         exit(1 + *pcount);
     }
 
@@ -88,26 +103,20 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
     if(f2 == 0){
 
         double right_closest =  closest_parallel(p + mid, n - mid, pdmax, pcount);
-        if(close(fd[1][0]) == -1){
-            perror("close read");
-            exit(1);
-        }
-        if(write(fd[1][1],&right_closest, sizeof(right_closest)) == -1){
-            perror("write");
-            exit(1);
-        }
-        if(close(fd[1][1]) == -1){
-            perror("close write");
-            exit(1);
-        }
+
+        Close(fd[1][0]);
+
+        Write(fd[1][1], &right_closest);
+
+        Close(fd[1][1]);
+
         exit(1 + *pcount);
     }
 
     if(f1 > 0 || f2 > 0){
-        if(close(fd[0][1]) == -1 || close(fd[1][1]) == -1){
-            perror("close write");
-            exit(1);
-        }
+
+        Close(fd[0][1]);
+        Close(fd[1][1]);
         double left_min, right_min;
 
         int status;
@@ -118,19 +127,16 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
             if(WIFEXITED(status)){
                 *pcount += WEXITSTATUS(status);
                 if(i == 0){
-                    if(read(fd[0][0],&left_min, sizeof(left_min)) != sizeof(left_min)){
-                        perror("read child 1");
-                        exit(1);
-                    }
+                    Read(fd[i][0],&left_min);
                 }
-                else{
-                    if(read(fd[1][0],&right_min, sizeof(left_min)) != sizeof(left_min)){
-                        perror("read child 2");
-                        exit(1);
-                    }
+                else if (i == 1){
+                    Read(fd[i][0],&right_min);
                 }
+
             }
         }
+        Close(fd[0][0]);
+        Close(fd[1][0]);
 
         // Find the smaller of two distances
         double d = min(left_min, right_min);
