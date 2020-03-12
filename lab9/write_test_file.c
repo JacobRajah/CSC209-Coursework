@@ -18,11 +18,13 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    // TODO: complete this program according its description above.
-
-
-
-
+    for(int i = 0; i < 100; i++){
+        int j = random() % 100;
+        if(fwrite(&j, sizeof(int),1,fp) == -1){
+            perror("fwrite");
+            exit(1);
+        }
+    }
 
     fclose(fp);
     return 0;
