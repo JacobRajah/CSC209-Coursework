@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
         fseek(fp, rand* sizeof(int),SEEK_SET);
         fread(&found_val, sizeof(int),1,fp);
         num_reads++;
-        printf("%d\n",found_val);
+        fprintf(stderr,"%d\n",found_val);
     }
     return 1; // something is wrong if we ever get here!
 }
