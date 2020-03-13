@@ -23,30 +23,33 @@ int main(int argc, char **argv) {
     char *filename = NULL;
     int pcount = 0;
 
-    // TODO: Parse the command line arguments
+    //integer that ensures only a file and a depth is passed as a parameter
     int correct_options = 0;
     int ch;
+    //while loop which uses get opt to scan argv for the parameters passed in after -d and -f
     while((ch = getopt(argc,argv,"d:f:")) != -1){
-      switch(ch){
+        switch(ch){
 
-          case 'd':
-              //case d
-              pdepth = strtol(argv[optind - 1],NULL,10);
-              correct_options++;
-              break;
+            case 'd':
+                //store the depth inputted by user
+                pdepth = strtol(argv[optind - 1],NULL,10);
+                correct_options++;
+                break;
 
-          case 'f':
-              filename = argv[optind-1];
-              correct_options++;
-              break;
+            case 'f':
+                //store the name of the file
+                filename = argv[optind-1];
+                correct_options++;
+                break;
 
-          default:
-              break;
-           }
+            default:
+                break;
+        }
     }
 
     if(correct_options != 2){
-      print_usage();
+        //only print the usage error if the file name and depth isn't given
+        print_usage();
     }
 
     // Read the points
@@ -63,3 +66,4 @@ int main(int argc, char **argv) {
 
     exit(0);
 }
+
