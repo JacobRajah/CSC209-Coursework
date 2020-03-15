@@ -33,13 +33,13 @@ int main(int argc, char **argv) {
 
             case 'd':
                 //store the depth inputted by user
-                pdepth = strtol(argv[optind - 1], NULL, 10);
+                pdepth = strtol(optarg, NULL, 10);
                 d_options++;
                 break;
 
             case 'f':
                 //store the name of the file
-                filename = argv[optind-1];
+                filename = optarg;
                 f_options++;
                 break;
 
