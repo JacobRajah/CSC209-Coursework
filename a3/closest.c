@@ -24,22 +24,23 @@ int main(int argc, char **argv) {
     int pcount = 0;
 
     //integer that ensures only a file and a depth is passed as a parameter
-    int correct_options = 0;
+    int d_options = 0;
+    int f_options = 0;
     int ch;
     //while loop which uses get opt to scan argv for the parameters passed in after -d and -f
-    while((ch = getopt(argc,argv,"d:f:")) != -1){
+    while((ch = getopt(argc, argv, "d:f:")) != -1){
         switch(ch){
 
             case 'd':
                 //store the depth inputted by user
-                pdepth = strtol(argv[optind - 1],NULL,10);
-                correct_options++;
+                pdepth = strtol(argv[optind - 1], NULL, 10);
+                d_options++;
                 break;
 
             case 'f':
                 //store the name of the file
                 filename = argv[optind-1];
-                correct_options++;
+                f_options++;
                 break;
 
             default:
@@ -47,7 +48,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    if(correct_options != 2){
+    if((d_options + f_options) != 2){
         //only print the usage error if the file name and depth isn't given
         print_usage();
     }

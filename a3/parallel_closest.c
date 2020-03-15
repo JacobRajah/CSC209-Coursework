@@ -14,7 +14,8 @@
 void *Malloc(int size) {
     void *ptr;
     if ((ptr = malloc(size)) == NULL) {
-        perror("malloc");exit(1);
+        perror("malloc");
+        exit(1);
     }
     return ptr;
 }
@@ -22,7 +23,8 @@ void *Malloc(int size) {
 int Fork() {
     int res;
     if ((res = fork()) == -1) {
-        perror("fork");exit(1);
+        perror("fork");
+        exit(1);
     }
     return res;
 }
@@ -118,8 +120,10 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
     //Only parent processs will run this section
     if(f1 > 0 || f2 > 0){
 
+        //Close the write end of the pipes, as they are unneeded
         Close(fd[0][1]);
         Close(fd[1][1]);
+        //Declaration of variables to store the smallest distance from the left and right of midpoint
         double left_min, right_min;
         int status;
 
@@ -141,6 +145,7 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
 
             }
         }
+        //Close the read ends of the pipe now that the data has been read
         Close(fd[0][0]);
         Close(fd[1][0]);
 
@@ -150,6 +155,8 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
         // Build an array strip[] that contains points close (closer than d) to the line passing through the middle point.
         struct Point *strip = Malloc(sizeof(struct Point) * n);
 
+        //iterate through the original list of points and gather all the points that are within a distance d from
+        //the mid point.
         int j = 0;
         for (int i = 0; i < n; i++) {
             if (abs(p[i].x - mid_point.x) < d) {
@@ -160,7 +167,7 @@ double closest_parallel(struct Point *p, int n, int pdmax, int *pcount) {
         // Find the closest points in strip.  Return the minimum of d and closest distance in strip[].
         double new_min = min(d, strip_closest(strip, j, d));
         free(strip);
-
+        //return the minimum distance
         return new_min;
     }
     return 0.0;
