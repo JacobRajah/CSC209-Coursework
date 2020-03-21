@@ -39,7 +39,7 @@ int main() {
         while ((nbytes = read(fd, after, room)) > 0) {
             // Step 1: update inbuf (how many bytes were just added?)
             inbuf += nbytes;
-
+            //printf("%s\n", buf);
             int where;
             //write(fileno(stdout),buf,sizeof(buf));
             // Step 2: the loop condition below calls find_network_newline
@@ -69,16 +69,13 @@ int main() {
                 // You want to move the stuff after the full line to the beginning
                 // of the buffer.  A loop can do it, or you can use memmove.
                 // memmove(destination, source, number_of_bytes)
-
-                memmove(buf, (buf + where) , (nbytes - 2));
-
-                after = buf;
-                room = BUFSIZE;
+                //memset(buf,0,where);
+                memmove(buf, (buf + where) , inbuf);
 
             }
             // Step 5: update after and room, in preparation for the next read.
-            after += inbuf;
-            room -= inbuf;
+            after = buf + inbuf;
+            room = BUFSIZE - inbuf;
 
         }
         close(fd);
@@ -99,8 +96,8 @@ int main() {
 int find_network_newline(const char *buf, int n) {
 
   for(int i = 0; i < n; i++){
-    if(buf[i] == '\n'){
-      return (1 + i);
+    if(buf[i] == '\r' && buf[i+1] == '\n'){
+      return (i + 2);
     }
   }
 
