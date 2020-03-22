@@ -69,7 +69,7 @@ int main() {
                 // You want to move the stuff after the full line to the beginning
                 // of the buffer.  A loop can do it, or you can use memmove.
                 // memmove(destination, source, number_of_bytes)
-                memset(buf,'\0',where);
+                //memset(buf,'\0',where);
                 memmove(buf, (buf + where) , inbuf);
 
             }
@@ -96,7 +96,7 @@ int main() {
 int find_network_newline(const char *buf, int n) {
 
   for(int i = 0; i < n; i++){
-    if(buf[i] == '\r' && buf[i+1] == '\n'){
+    if((buf[i] == '\r' && i < n - 1) && buf[i+1] == '\n'){
       return (i + 2);
     }
   }
