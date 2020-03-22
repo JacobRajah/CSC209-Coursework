@@ -69,7 +69,7 @@ int main() {
                 // You want to move the stuff after the full line to the beginning
                 // of the buffer.  A loop can do it, or you can use memmove.
                 // memmove(destination, source, number_of_bytes)
-                //memset(buf,0,where);
+                memset(buf,'\0',where);
                 memmove(buf, (buf + where) , inbuf);
 
             }
