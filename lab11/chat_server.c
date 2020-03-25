@@ -56,20 +56,43 @@ int accept_connection(int fd, struct sockname *usernames) {
  * Return the fd if it has been closed or 0 otherwise.
  */
 int read_from(int client_index, struct sockname *usernames) {
+
     int fd = usernames[client_index].sock_fd;
-    char buf[BUF_SIZE + 1];
 
-    /*
-     * In Lab 10, you focused on handling partial reads. For this lab, you do
-     * not need handle partial reads.  Because of that, this server program
-     * does not check for "\r\n" when it reads from the client. 
-     */
+    //register username
+    if(usernames[client_index].username == NULL){
 
-    int num_read = read(fd, &buf, BUF_SIZE);
-    buf[num_read] = '\0'; 
-    if (num_read == 0 || write(fd, buf, strlen(buf)) != strlen(buf)) {
-        usernames[client_index].sock_fd = -1;
-        return fd;
+        char temp_name[BUF_SIZE + 1];
+        int read_name = read(fd, &temp_name, BUF_SIZE);
+        temp_name[read_name - 1] = '\0';
+
+        usernames[client_index].username = malloc(read_name * sizeof(char));
+        strncpy(usernames[client_index].username, temp_name, read_name);
+
+    }
+    else{
+        char user_message[BUF_SIZE*2 +3];
+        int s = sizeof(usernames[client_index].username);
+        strncpy(user_message, usernames[client_index].username, s);
+        strncat(user_message, ": ", sizeof(char)*2);
+        /*
+         * In Lab 10, you focused on handling partial reads. For this lab, you do
+         */
+        char buf[BUF_SIZE + 1];
+        int num_read = read(fd, &buf, BUF_SIZE);
+        //if read fails
+        if (num_read == 0) {
+            usernames[client_index].sock_fd = -1;
+            return fd;
+        }
+        // append message
+        strncat(user_message, buf, num_read);
+
+        for(int i = 0; i < MAX_CONNECTIONS; i++){
+            if(usernames[i].sock_fd != -1){
+                write(usernames[i].sock_fd, user_message, strlen(user_message));
+            }
+        }
     }
 
     return 0;
