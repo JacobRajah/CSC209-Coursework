@@ -72,7 +72,7 @@ int main(void) {
 
         if(FD_ISSET(sock_fd, &curr_fds)){
             //read from pipe and output
-            int num_read = read(sock_fd, buf, BUF_SIZE);
+            int num_read = read(sock_fd, buf, BUF_SIZE*2 +2);
             buf[num_read] = '\0';
             printf("%s", buf);
 

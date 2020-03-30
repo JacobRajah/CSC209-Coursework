@@ -183,6 +183,7 @@ int main(void) {
                 if (client_closed > 0) {
                     FD_CLR(client_closed, &all_fds);
                     printf("Client %d disconnected\n", client_closed);
+                    free(usernames[index].username);
                 } else {
                     printf("Echoing message from client %d\n", usernames[index].sock_fd);
                 }
