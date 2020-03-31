@@ -96,7 +96,7 @@ int message_space(struct client **active_clients_ptr, struct client *user){
         }
     }
     //only reaches here if message array is full
-    char no_space[BUF_SIZE] = {'\0'};
+    char no_space[BUF_SIZE + 50] = {'\0'};
     sprintf(no_space, "%s: you have sent the maximum amount of messages\r\n", user->username);
     Write(user,no_space,active_clients_ptr);
     return -1;
@@ -140,7 +140,7 @@ int check_follow_space(struct client **active_clients_ptr, struct client *user, 
         }
     }
     if(space_following == 0){
-        char following_err[BUF_SIZE] = {'\0'};
+        char following_err[BUF_SIZE*2 + 50] = {'\0'};
         sprintf(following_err, "%s: you reached max following, cannot follow %s\r\n", user->username, c->username);
         Write(user, following_err, active_clients_ptr);
     }
@@ -153,7 +153,7 @@ int check_follow_space(struct client **active_clients_ptr, struct client *user, 
         }
     }
     if(space_followers == 0){
-        char follow_err[BUF_SIZE] = {'\0'};
+        char follow_err[BUF_SIZE*2 + 60] = {'\0'};
         sprintf(follow_err, "%s: %s has the max amount of followers, cannot follow\r\n", user->username, c->username);
         Write(user,follow_err,active_clients_ptr);
     }
@@ -210,7 +210,7 @@ void unfollow(struct client **active_clients_ptr, struct client *user, char *arg
             printf("[%s] unfollowed %s\n", user->username, to_be_unfollowed->username);
         }
         else{
-            char follow[BUF_SIZE] = {'\0'};
+            char follow[BUF_SIZE*2 + 25] = {'\0'};
             sprintf(follow, "%s: you don't follow %s\r\n", user->username, to_be_unfollowed->username);
             Write(user,follow, active_clients_ptr);
         }
@@ -237,7 +237,7 @@ void follow(struct client **active_clients_ptr, struct client *user, char *argum
         int ret = is_following(user, to_be_followed);
 
         if(ret == 1){
-            char follow_already[BUF_SIZE] = {'\0'};
+            char follow_already[BUF_SIZE*2 + 25] = {'\0'};
             sprintf(follow_already, "%s: you already follow %s\r\n", user->username, to_be_followed->username);
             Write(user,follow_already,active_clients_ptr);
         }
