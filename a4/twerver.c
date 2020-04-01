@@ -53,6 +53,20 @@ void Write(struct client *user, char *message, struct client **active_clients_pt
 // from allset when a write to a socket fails. 
 fd_set allset;
 
+/*Allocate memory on the heap and error check to ensure malloc was successful*/
+void *Malloc(int size) {
+    void *ptr;
+    if ((ptr = malloc(size)) == NULL) {
+        perror("malloc");
+        exit(1);
+    }
+    return ptr;
+}
+
+/*
+ * Write all the messages sent by the client usr_following prior to the command
+ * to the user who issued the command.
+ */
 void display_messages(struct client *user, struct client *usr_following, struct client **active_clients_ptr){
     for(int i = 0; i < MSG_LIMIT; i++){
         if((usr_following->message)[i][0] != '\0'){
@@ -64,6 +78,10 @@ void display_messages(struct client *user, struct client *usr_following, struct 
     }
 }
 
+/*
+ * iterate through all the clients the user is following and
+ * call display_messages for each following
+ */
 void show(struct client **active_clients_ptr, struct client *user){
     printf("[%s] Showing all following messages...\n", user->username);
     for(int i = 0; i < FOLLOW_LIMIT; i++){
@@ -73,6 +91,9 @@ void show(struct client **active_clients_ptr, struct client *user){
     }
 }
 
+/*
+ * Send a specified message to all the followers of a user
+ */
 void send_followers(struct client **active_clients_ptr, struct client *user, char *message){
     for(int i = 0; i < FOLLOW_LIMIT; i++){
         if((user->followers)[i] != NULL){
@@ -81,7 +102,6 @@ void send_followers(struct client **active_clients_ptr, struct client *user, cha
             Write((user->followers)[i], message_follower, active_clients_ptr);
         }
     }
-    printf("%s: %s\n", user->username, message);
 }
 
 /*
@@ -96,8 +116,9 @@ int message_space(struct client **active_clients_ptr, struct client *user){
         }
     }
     //only reaches here if message array is full
+    printf("%s has the sent the maximum amount of messages\n", user->username);
     char no_space[BUF_SIZE + 50] = {'\0'};
-    sprintf(no_space, "%s: you have sent the maximum amount of messages\r\n", user->username);
+    sprintf(no_space, "%s, you have sent the maximum amount of messages\r\n", user->username);
     Write(user,no_space,active_clients_ptr);
     return -1;
 }
@@ -108,8 +129,7 @@ int message_space(struct client **active_clients_ptr, struct client *user){
 void Write(struct client *user, char *message, struct client **clients_ptr){
 
     if(write(user->fd, message, strlen(message)) == -1){
-        fprintf(stderr,
-                "Write to client %s failed\n", inet_ntoa(user->ipaddr));
+        fprintf(stderr, "Write to client %s failed\n", inet_ntoa(user->ipaddr));
         remove_client(clients_ptr, user->fd);
     }
 }
@@ -132,17 +152,19 @@ int is_following(struct client *user, struct client *c){
 int check_follow_space(struct client **active_clients_ptr, struct client *user, struct client *c){
     int space_following = 0;
     int space_followers = 0;
-    //1. Check is user has space in following
+    //1. Check if user has space in following
     for(int i = 0; i < FOLLOW_LIMIT; i++){
         if((user->following)[i] == NULL){
             space_following++;
             break;
         }
     }
+    //If the user doesn't have space in their following list, notify user
     if(space_following == 0){
         char following_err[BUF_SIZE*2 + 50] = {'\0'};
-        sprintf(following_err, "%s: you reached max following, cannot follow %s\r\n", user->username, c->username);
+        sprintf(following_err, "%s, you reached max following, cannot follow %s\r\n", user->username, c->username);
         Write(user, following_err, active_clients_ptr);
+        return 0;
     }
 
     //2. Check if c has space in followers
@@ -152,10 +174,12 @@ int check_follow_space(struct client **active_clients_ptr, struct client *user, 
             break;
         }
     }
+    //if the person to be followed has no space in their followers, notify user of the issue
     if(space_followers == 0){
         char follow_err[BUF_SIZE*2 + 60] = {'\0'};
-        sprintf(follow_err, "%s: %s has the max amount of followers, cannot follow\r\n", user->username, c->username);
+        sprintf(follow_err, "%s, %s has the max amount of followers, cannot follow\r\n", user->username, c->username);
         Write(user,follow_err,active_clients_ptr);
+        return 0;
     }
 
     return (space_followers && space_following);
@@ -169,7 +193,7 @@ void add_follower(struct client *user, struct client *new_follower){
     for(int i = 0; i < FOLLOW_LIMIT; i++){
         if((user->followers)[i] == NULL){
             (user->followers)[i] = new_follower;
-            printf("Successfully added a new follower\n");
+            printf("%s has %s as a follower\n", user->username, new_follower->username);
             break;
         }
     }
@@ -183,7 +207,7 @@ void add_following(struct client *user, struct client *to_be_followed){
     for(int i = 0; i < FOLLOW_LIMIT; i++){
         if((user->following)[i] == NULL){
             (user->following)[i] = to_be_followed;
-            printf("Successfully followed a new user\n");
+            printf("%s is following %s\n", user->username, to_be_followed->username);
             break;
         }
     }
@@ -201,21 +225,24 @@ void unfollow(struct client **active_clients_ptr, struct client *user, char *arg
     if(to_be_unfollowed == NULL){
         char *warning = "Sorry this username does not exist\r\n";
         Write(user,warning,active_clients_ptr);
+        printf("%s was unable to follow %s\n", user->username, argument);
     }
     else{
-        //1. check that is not following is false
+        //check that is following is true
         if(is_following(user,to_be_unfollowed)){
             remove_follower(to_be_unfollowed,user);
+            printf("%s has lost %s as a follower\n", to_be_unfollowed->username, user->username);
             remove_following(user,to_be_unfollowed);
-            printf("[%s] unfollowed %s\n", user->username, to_be_unfollowed->username);
+            printf("%s is no longer following %s\n", user->username, to_be_unfollowed->username);
         }
         else{
+            //notify the user that they don't follow the specified target
             char follow[BUF_SIZE*2 + 25] = {'\0'};
-            sprintf(follow, "%s: you don't follow %s\r\n", user->username, to_be_unfollowed->username);
+            sprintf(follow, "%s, you don't follow %s\r\n", user->username, to_be_unfollowed->username);
             Write(user,follow, active_clients_ptr);
+            printf("%s is not following %s\n", user->username, to_be_unfollowed->username);
         }
     }
-    free(argument);
 }
 
 
@@ -230,26 +257,25 @@ void follow(struct client **active_clients_ptr, struct client *user, char *argum
     if(to_be_followed == NULL){
         char *warning = "Sorry this username does not exist\r\n";
         Write(user,warning,active_clients_ptr);
+        printf("%s could not follow %s\n", user->username, argument);
     }
     else{
-        //1. check both users to make sure they have space if 1 then good
-        //2. check that the person to be followed isnt already being followed
+
+        //check that the person to be followed isnt already being followed
         int ret = is_following(user, to_be_followed);
 
         if(ret == 1){
             char follow_already[BUF_SIZE*2 + 25] = {'\0'};
-            sprintf(follow_already, "%s: you already follow %s\r\n", user->username, to_be_followed->username);
+            sprintf(follow_already, "%s, you already follow %s\r\n", user->username, to_be_followed->username);
             Write(user,follow_already,active_clients_ptr);
+            printf("%s already follows %s\n", user->username, to_be_followed->username);
         }
-
+        //check both users to make sure they have space, and make sure is_following returns 0
         if(check_follow_space(active_clients_ptr,user,to_be_followed) && (ret == 0)){
-            add_follower(to_be_followed,user);
             add_following(user,to_be_followed);
-            printf("[%s] followed %s\n", user->username, to_be_followed->username);
+            add_follower(to_be_followed,user);
         }
-        //3. carry out by adding person to following and adding yourself to their followers
     }
-    free(argument);
 }
 
 /*
@@ -258,13 +284,15 @@ void follow(struct client **active_clients_ptr, struct client *user, char *argum
 void execute_command(struct client **active_clients_ptr, struct client *user, char *command, char *argument){
 
     if(strcmp(command, FOLLOW_MSG) == 0){
+        //If the user enters follow then the follow() function will be executed
         follow(active_clients_ptr,user,argument);
     }
     else if(strcmp(command, UNFOLLOW_MSG) == 0){
+        //If the user enters unfollow then the unfollow() function will be executed
         unfollow(active_clients_ptr,user,argument);
     }
     else if(strcmp(command, SEND_MSG) == 0){
-        //run send task
+        //If the user enters send then the following will be executed
         //1. check if space in message list
         int index = message_space(active_clients_ptr, user);
         //2. store in message list
@@ -274,13 +302,15 @@ void execute_command(struct client **active_clients_ptr, struct client *user, ch
             //3. send message to all followers
             send_followers(active_clients_ptr, user, argument);
         }
-        free(argument);
     }
     else{
+        printf("Invalid Command\n");
         char *warning = "Invalid Command\r\n";
         Write(user,warning,active_clients_ptr);
-        free(argument);
     }
+    //free space allocated
+    free(argument);
+    free(command);
 }
 
 /*
@@ -291,34 +321,34 @@ void active_user_input(struct client **active_clients_ptr, struct client *user){
     if(read_a_str(user,active_clients_ptr) == 0){
         return;
     }
-
+    printf("%s: %s\n", user->username, user->inbuf);
+    //search for a space in the inputted string
     char *space = strchr(user->inbuf, ' ');
-
+    //perform either the show or quit action based on whats in user->in_buf
     if(space == NULL){
         if(strcmp(user->inbuf, SHOW_MSG) == 0){
             show(active_clients_ptr, user);
         }
         else if(strcmp(user->inbuf, "quit") == 0){
-            printf("[%s] has quit\n", user->username);
+            printf("%s has quit...\n", user->username);
             remove_client(active_clients_ptr, user->fd);
         }
         else{
+            printf("Invalid Command\n");
             char *warning = "Invalid Command\r\n";
             Write(user,warning,active_clients_ptr);
         }
         return;
     }
-    //DONT FORGET TO FREE for arg cpy to message and then free ERROR CHECK
+    //Allocate space for the command so that it can be passed to the execute_command helper
     int cmd_size = strlen(user->inbuf) - strlen(space);
-    char *command = malloc(sizeof(char)* cmd_size + 1);
+    char *command = Malloc(sizeof(char)* cmd_size + 1);
     strncpy(command, user->inbuf, cmd_size);
     command[cmd_size] = '\0';
-    printf("CMD: %s\n", command);
-
-    char *argument = malloc(sizeof(char)*(strlen(space)));
+    //Allocate space for the argument given after the command
+    char *argument = Malloc(sizeof(char)*(strlen(space)));
     strncpy(argument, (space + sizeof(char)), strlen(space) - sizeof(char));
     argument[strlen(space) - 1] = '\0';
-    printf("ARGS: %s\n", argument);
 
     execute_command(active_clients_ptr,user,command,argument);
 }
@@ -344,11 +374,10 @@ struct client *find_user(struct client **active_clients_ptr, char *usr_name){
  * Send the message in s to all clients in active_clients.
  */
 void announce(struct client *active_clients, char *s){
-
+    //announce user has joined to all active clients
     struct client *curr = active_clients;
     while(curr != NULL){
         Write(curr, s, &active_clients);
-        //printf("here is the write: %s: %d\n", curr->username, w);
         curr = curr->next;
     }
 }
@@ -360,7 +389,6 @@ void activate_client(struct client *c,
                      struct client **active_clients_ptr, struct client **new_clients_ptr){
     //Remove client from new clients
     struct client **p;
-
     for (p = new_clients_ptr; *p && (*p)->fd != c->fd; p = &(*p)->next)
         ;
 
@@ -371,8 +399,7 @@ void activate_client(struct client *c,
         //set value of pointer to next client, removing client c
         *p = t;
     } else {
-        fprintf(stderr,
-                "Trying to remove fd, but I couldn't from new_client\n");
+        fprintf(stderr, "Trying to remove fd, but couldn't from new_client\n");
     }
 
     //add client c to head of active clients
@@ -384,31 +411,28 @@ void activate_client(struct client *c,
  * Read input from client until network newline is
  * found. Updates in buf with the full string */
 int read_a_str(struct client *user, struct client **clients_ptr){
-    printf("Start reading string\n");
     int num_chars;
     if((num_chars = read(user->fd, user->inbuf, BUF_SIZE)) <= 0){
         //if error occurs, disconnect client
-        fprintf(stderr,
-                "Read from client %s failed\n", inet_ntoa(user->ipaddr));
+        fprintf(stderr, "Read from client %s failed\n", inet_ntoa(user->ipaddr));
         remove_client(clients_ptr,user->fd);
         return 0;
     }
     (user->inbuf)[num_chars] = '\0';
     //store pointer to next char in buf
     (user->in_ptr) = &((user->inbuf)[num_chars]);
-    //printf("Finished first read\n");
+    printf("[%d] Read %d bytes\n", user->fd, num_chars);
 
     // it may take more than one read to get all of the data that was written
     while(strstr((user->inbuf), "\r\n") == NULL) {
         int curr_chars;
         if((curr_chars = read(user->fd, (user->in_ptr), BUF_SIZE-num_chars)) <= 0){
             //if error occurs, disconnect client
-            fprintf(stderr,
-                    "Read from client %s failed\n", inet_ntoa(user->ipaddr));
+            fprintf(stderr, "Read from client %s failed\n", inet_ntoa(user->ipaddr));
             remove_client(clients_ptr,user->fd);
             return 0;
         }
-        //printf("STUCK %d\n", curr_chars);
+        printf("[%d] Read %d bytes\n", user->fd, curr_chars);
         num_chars += curr_chars;
         (user->inbuf)[num_chars] = '\0';
         //update pointer
@@ -416,7 +440,7 @@ int read_a_str(struct client *user, struct client **clients_ptr){
     }
 
     (user->inbuf)[num_chars -2] = '\0';
-    printf("Finished reading string\n");
+    printf("[%d] Found Newline: %s\n", user->fd, user->inbuf);
     return 1;
 }
 
@@ -440,7 +464,6 @@ int read_new_client(struct client *new_user, struct client **active_clients_ptr,
     struct client *curr = *(active_clients_ptr);
     while(curr != NULL){
         //if entered username matches any existent usernames then prompt user to enter another username
-        printf("%s\n", curr->username);
         if(strcmp((curr->username), new_user->inbuf) == 0){
             char *existent_usr = "Username taken. Please enter a new username: ";
             Write(new_user, existent_usr, new_clients_ptr);
@@ -496,12 +519,14 @@ void rm_followers_following(struct client *c){
         if((c->followers)[i] != NULL){
             //Make the user no long follow client c
             remove_following((c->followers)[i], c);
+            printf("%s is no longer following %s because they disconnected\n", (c->followers)[i]->username, c->username);
         }
         //iterate through the list of users the client c is following and remove client c
         //as a follower for the user (c->following)[i]
         if((c->following)[i] != NULL){
-            //Remove client as one of user's followers
+            //Remove client c as one of (c->following)[i] followers
             remove_follower((c->following)[i], c);
+            printf("%s no longer has %s as a follower because they disconnected\n", (c->following)[i]->username, c->username);
         }
 
     }
@@ -564,8 +589,7 @@ void remove_client(struct client **clients, int fd) {
         free(*p);
         *p = t;
     } else {
-        fprintf(stderr, 
-            "Trying to remove fd %d, but I don't know about it\n", fd);
+        fprintf(stderr, "Unable to successfully remove client %d\n", fd);
     }
 }
 
@@ -657,18 +681,14 @@ int main (int argc, char **argv) {
                 for (p = new_clients; p != NULL; p = p->next) {
                     if (cur_fd == p->fd) {
                         // TODO: handle input from a new client who has not yet entered an acceptable name
-                        printf("Reading username from client...\n");
                         if(read_new_client(p,&active_clients, &new_clients)){
                             printf("Activating client...\n");
                             activate_client(p, &active_clients, &new_clients);
-                            char notification[BUF_SIZE] = {'\0'};
-                            strncpy(notification, p->username, strlen(p->username));
-                            char *rest = ENTERED_MSG;
-                            strncat(notification, rest, strlen(rest));
+                            char notification[BUF_SIZE + 20] = {'\0'};
+                            sprintf(notification, "%s has just joined\r\n", p->username);
                             announce(active_clients,notification);
                             printf("%s",notification);
                         }
-                        printf("Handled new user\n");
                         handled = 1;
                         break;
                     }
