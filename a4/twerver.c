@@ -308,9 +308,6 @@ void execute_command(struct client **active_clients_ptr, struct client *user, ch
         char *warning = "Invalid Command\r\n";
         Write(user,warning,active_clients_ptr);
     }
-    //free space allocated
-    free(argument);
-    free(command);
 }
 
 /*
@@ -351,6 +348,9 @@ void active_user_input(struct client **active_clients_ptr, struct client *user){
     argument[strlen(space) - 1] = '\0';
 
     execute_command(active_clients_ptr,user,command,argument);
+    //free space allocated
+    free(argument);
+    free(command);
 }
 
 /*
