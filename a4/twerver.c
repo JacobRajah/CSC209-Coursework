@@ -411,35 +411,27 @@ void activate_client(struct client *c,
  * found. Updates in buf with the full string */
 int read_a_str(struct client *user, struct client **clients_ptr){
     int num_chars;
-    if((num_chars = read(user->fd, user->inbuf, BUF_SIZE)) <= 0){
+    if((num_chars = read(user->fd, user->in_ptr, BUF_SIZE)) <= 0){
         //if error occurs, disconnect client
         fprintf(stderr, "Read from client %s failed\n", inet_ntoa(user->ipaddr));
         remove_client(clients_ptr, user->fd);
         return 0;
     }
-    (user->inbuf)[num_chars] = '\0';
+    (user->in_ptr)[num_chars] = '\0';
     //store pointer to next char in buf
-    (user->in_ptr) = &((user->inbuf)[num_chars]);
+    (user->in_ptr) = &((user->in_ptr)[num_chars]);
     printf("[%d] Read %d bytes\n", user->fd, num_chars);
-
-    // it may take more than one read to get all of the data that was written
-    while(strstr((user->inbuf), "\r\n") == NULL) {
-        int curr_chars;
-        if((curr_chars = read(user->fd, (user->in_ptr), BUF_SIZE-num_chars)) <= 0){
-            //if error occurs, disconnect client
-            fprintf(stderr, "Read from client %s failed\n", inet_ntoa(user->ipaddr));
-            remove_client(clients_ptr, user->fd);
-            return 0;
-        }
-        printf("[%d] Read %d bytes\n", user->fd, curr_chars);
-        num_chars += curr_chars;
-        (user->inbuf)[num_chars] = '\0';
-        //update pointer
-        (user->in_ptr) = &((user->inbuf)[num_chars]);
+    //store pointer to network newline
+    char *terminator = strstr((user->inbuf), "\r\n");
+    if(terminator == NULL){
+        //partial read has occurred so exit with 0 and partial read stored in buf
+        return 0;
     }
-
-    (user->inbuf)[num_chars -2] = '\0';
+    //If code reaches here then network newline has been found
+    terminator[0] = '\0';
     printf("[%d] Found Newline: %s\n", user->fd, user->inbuf);
+    //Since read is complete reset pointer to beginning
+    user->in_ptr = user->inbuf;
     return 1;
 }
 
@@ -455,7 +447,7 @@ int read_new_client(struct client *new_user, struct client **active_clients_ptr,
     }
 
     if(strcmp(new_user->inbuf, "") == 0){
-        char *empty_message = "Please enter a non empty username: ";
+        char *empty_message = "Please enter a non empty username:\r\n";
         Write(new_user, empty_message, new_clients_ptr);
         return 0;
     }
@@ -464,7 +456,7 @@ int read_new_client(struct client *new_user, struct client **active_clients_ptr,
     while(curr != NULL){
         //if entered username matches any existent usernames then prompt user to enter another username
         if(strcmp((curr->username), new_user->inbuf) == 0){
-            char *existent_usr = "Username taken. Please enter a new username: ";
+            char *existent_usr = "Username taken. Please enter a new username:\r\n";
             Write(new_user, existent_usr, new_clients_ptr);
             return 0;
         }
