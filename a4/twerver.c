@@ -135,7 +135,8 @@ void Write(struct client *user, char *message, struct client **clients_ptr){
 }
 
 /*
- * returns 1 if the user is following client c*/
+ * returns 1 if the user is following client c
+ */
 int is_following(struct client *user, struct client *c){
     for(int i = 0; i < FOLLOW_LIMIT; i++){
         if (((user->following)[i] != NULL) && ((user->following)[i]->fd == c->fd)){
@@ -260,17 +261,17 @@ void follow(struct client **active_clients_ptr, struct client *user, char *argum
         printf("%s could not follow %s\n", user->username, argument);
     }
     else{
-        //check that the person to be followed isnt already being followed
-        int ret = is_following(user, to_be_followed);
+        //check that the person to be followed isnt already being followed.. Should return 0
+        int following = is_following(user, to_be_followed);
 
-        if(ret == 1){
+        if(following == 1){
             char follow_already[(BUF_SIZE * 2) + 25] = {'\0'};
             sprintf(follow_already, "%s, you already follow %s\r\n", user->username, to_be_followed->username);
             Write(user, follow_already, active_clients_ptr);
             printf("%s already follows %s\n", user->username, to_be_followed->username);
         }
         //check both users to make sure they have space, and make sure is_following returns 0
-        if(check_follow_space(active_clients_ptr, user, to_be_followed) && (ret == 0)){
+        if(check_follow_space(active_clients_ptr, user, to_be_followed) && (following == 0)){
             add_following(user, to_be_followed);
             add_follower(to_be_followed, user);
         }
@@ -391,8 +392,7 @@ void activate_client(struct client *c,
     for (p = new_clients_ptr; *p && (*p)->fd != c->fd; p = &(*p)->next)
         ;
 
-    // Now, p points to (1) top, or (2) a pointer to another client
-    // This avoids a special case for removing the head of the list
+    // remove client c from the new clients linked list if found in the list
     if (*p) {
         struct client *t = (*p)->next;
         //set value of pointer to next client, removing client c
@@ -411,7 +411,7 @@ void activate_client(struct client *c,
  * found. Updates in buf with the full string */
 int read_a_str(struct client *user, struct client **clients_ptr){
     int num_chars;
-    if((num_chars = read(user->fd, user->in_ptr, BUF_SIZE)) <= 0){
+    if((num_chars = read(user->fd, user->in_ptr, BUF_SIZE - strlen(user->inbuf))) <= 0){
         //if error occurs, disconnect client
         fprintf(stderr, "Read from client %s failed\n", inet_ntoa(user->ipaddr));
         remove_client(clients_ptr, user->fd);
