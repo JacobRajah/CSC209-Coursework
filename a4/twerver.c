@@ -421,10 +421,14 @@ void activate_client(struct client *c,
  * Read input from client until network newline is
  * found. Updates in buf with the full string */
 int read_a_str(struct client *user, struct client **clients_ptr){
-    int num_chars;
-    if((num_chars = read(user->fd, user->in_ptr, BUF_SIZE - strlen(user->inbuf))) <= 0){
+    int num_chars = read(user->fd, user->in_ptr, BUF_SIZE - strlen(user->inbuf));
+    if(num_chars == -1){
         //if error occurs, disconnect client
-        fprintf(stderr, "Read from client %s failed, disconnecting them now...\n", inet_ntoa(user->ipaddr));
+        fprintf(stderr, "Read from client %s failed\n", inet_ntoa(user->ipaddr));
+        exit(1);
+    }
+    else if(num_chars == 0){
+        printf("Client %d %s has disconnected\n", user->fd, inet_ntoa(user->ipaddr));
         if((user->username)[0] == '\0'){
             remove_client(clients_ptr, user->fd);
             return 0;
