@@ -47,6 +47,7 @@ struct client *find_user(struct client **active_clients_ptr, char *usr_name);
 void remove_follower(struct client *user, struct client *c);
 void remove_following(struct client *user, struct client *c);
 void Write(struct client *user, char *message, struct client **active_clients_ptr);
+void announce(struct client *active_clients, char *s);
 
 // The set of socket descriptors for select to monitor.
 // This is a global variable because we need to remove socket descriptors
@@ -130,7 +131,14 @@ void Write(struct client *user, char *message, struct client **clients_ptr){
 
     if(write(user->fd, message, strlen(message)) == -1){
         fprintf(stderr, "Write to client %s failed\n", inet_ntoa(user->ipaddr));
+        if((user->username)[0] == '\0'){
+            remove_client(clients_ptr, user->fd);
+            return;
+        }
+        char announcement[BUF_SIZE + 10];
+        sprintf(announcement, "Goodbye %s\n", user->username);
         remove_client(clients_ptr, user->fd);
+        announce(*clients_ptr, announcement);
     }
 }
 
@@ -328,7 +336,10 @@ void active_user_input(struct client **active_clients_ptr, struct client *user){
         }
         else if(strcmp(user->inbuf, "quit") == 0){
             printf("%s has quit...\n", user->username);
+            char announcement[BUF_SIZE + 10];
+            sprintf(announcement, "Goodbye %s\n", user->username);
             remove_client(active_clients_ptr, user->fd);
+            announce(*active_clients_ptr, announcement);
         }
         else{
             printf("Invalid Command\n");
@@ -413,8 +424,15 @@ int read_a_str(struct client *user, struct client **clients_ptr){
     int num_chars;
     if((num_chars = read(user->fd, user->in_ptr, BUF_SIZE - strlen(user->inbuf))) <= 0){
         //if error occurs, disconnect client
-        fprintf(stderr, "Read from client %s failed\n", inet_ntoa(user->ipaddr));
+        fprintf(stderr, "Read from client %s failed, disconnecting them now...\n", inet_ntoa(user->ipaddr));
+        if((user->username)[0] == '\0'){
+            remove_client(clients_ptr, user->fd);
+            return 0;
+        }
+        char announcement[BUF_SIZE + 10];
+        sprintf(announcement, "Goodbye %s\n", user->username);
         remove_client(clients_ptr, user->fd);
+        announce(*clients_ptr, announcement);
         return 0;
     }
     (user->in_ptr)[num_chars] = '\0';
