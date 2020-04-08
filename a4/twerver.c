@@ -137,7 +137,7 @@ void Write(struct client *user, char *message, struct client **clients_ptr){
         }
         //Announce goodbye to client who randomly exited
         char announcement[BUF_SIZE + 10];
-        sprintf(announcement, "Goodbye %s\n", user->username);
+        sprintf(announcement, "Goodbye %s\r\n", user->username);
         remove_client(clients_ptr, user->fd);
         announce(*clients_ptr, announcement);
     }
@@ -343,7 +343,7 @@ void active_user_input(struct client **active_clients_ptr, struct client *user){
         else if(strcmp(user->inbuf, "quit") == 0){
             printf("%s has quit...\n", user->username);
             char announcement[BUF_SIZE + 10];
-            sprintf(announcement, "Goodbye %s\n", user->username);
+            sprintf(announcement, "Goodbye %s\r\n", user->username);
             remove_client(active_clients_ptr, user->fd);
             //Announce that user has left
             announce(*active_clients_ptr, announcement);
@@ -443,7 +443,7 @@ int read_a_str(struct client *user, struct client **clients_ptr){
             return 0;
         }
         char announcement[BUF_SIZE + 10];
-        sprintf(announcement, "Goodbye %s\n", user->username);
+        sprintf(announcement, "Goodbye %s\r\n", user->username);
         remove_client(clients_ptr, user->fd);
         announce(*clients_ptr, announcement);
         return 0;
