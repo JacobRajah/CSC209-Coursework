@@ -135,6 +135,7 @@ void Write(struct client *user, char *message, struct client **clients_ptr){
             remove_client(clients_ptr, user->fd);
             return;
         }
+        //Announce goodbye to client who randomly exited
         char announcement[BUF_SIZE + 10];
         sprintf(announcement, "Goodbye %s\n", user->username);
         remove_client(clients_ptr, user->fd);
@@ -147,6 +148,7 @@ void Write(struct client *user, char *message, struct client **clients_ptr){
  */
 int is_following(struct client *user, struct client *c){
     for(int i = 0; i < FOLLOW_LIMIT; i++){
+        //iterate through user following and return 1 if the user is already following c
         if (((user->following)[i] != NULL) && ((user->following)[i]->fd == c->fd)){
             return 1;
         }
@@ -200,6 +202,7 @@ int check_follow_space(struct client **active_clients_ptr, struct client *user, 
  */
 void add_follower(struct client *user, struct client *new_follower){
     for(int i = 0; i < FOLLOW_LIMIT; i++){
+        //if an empty spot is found then add client pointer to that position
         if((user->followers)[i] == NULL){
             (user->followers)[i] = new_follower;
             printf("%s has %s as a follower\n", user->username, new_follower->username);
@@ -214,6 +217,7 @@ void add_follower(struct client *user, struct client *new_follower){
  */
 void add_following(struct client *user, struct client *to_be_followed){
     for(int i = 0; i < FOLLOW_LIMIT; i++){
+        //If the user has space in their following list then add client
         if((user->following)[i] == NULL){
             (user->following)[i] = to_be_followed;
             printf("%s is following %s\n", user->username, to_be_followed->username);
@@ -230,7 +234,7 @@ void unfollow(struct client **active_clients_ptr, struct client *user, char *arg
     //check if user exists
     printf("Looking for user...\n");
     struct client *to_be_unfollowed = find_user(active_clients_ptr, argument);
-
+    //if user couldnt be found notify the user who sent the request
     if(to_be_unfollowed == NULL){
         char *warning = "Sorry this username does not exist\r\n";
         Write(user, warning, active_clients_ptr);
@@ -331,14 +335,17 @@ void active_user_input(struct client **active_clients_ptr, struct client *user){
     char *space = strchr(user->inbuf, ' ');
     //perform either the show or quit action based on whats in user->in_buf
     if(space == NULL){
+        //This is the case where the user asks to show all following messages
         if(strcmp(user->inbuf, SHOW_MSG) == 0){
             show(active_clients_ptr, user);
         }
+        //This case runs if the user enters the command quit
         else if(strcmp(user->inbuf, "quit") == 0){
             printf("%s has quit...\n", user->username);
             char announcement[BUF_SIZE + 10];
             sprintf(announcement, "Goodbye %s\n", user->username);
             remove_client(active_clients_ptr, user->fd);
+            //Announce that user has left
             announce(*active_clients_ptr, announcement);
         }
         else{
@@ -421,13 +428,15 @@ void activate_client(struct client *c,
  * Read input from client until network newline is
  * found. Updates in buf with the full string */
 int read_a_str(struct client *user, struct client **clients_ptr){
+    //Read in whatever content is sent from client
     int num_chars = read(user->fd, user->in_ptr, BUF_SIZE - strlen(user->inbuf));
     if(num_chars == -1){
-        //if error occurs, disconnect client
+        //if read error occurs, disconnect client
         fprintf(stderr, "Read from client %s failed\n", inet_ntoa(user->ipaddr));
         exit(1);
     }
     else if(num_chars == 0){
+        //If num_chars is 0 this means client safely exited
         printf("Client %d %s has disconnected\n", user->fd, inet_ntoa(user->ipaddr));
         if((user->username)[0] == '\0'){
             remove_client(clients_ptr, user->fd);
@@ -463,11 +472,11 @@ int read_a_str(struct client *user, struct client **clients_ptr){
  * else returns 0
  */
 int read_new_client(struct client *new_user, struct client **active_clients_ptr, struct client **new_clients_ptr){
-
+    //Check that the read was successfully and found a network newline
     if(read_a_str(new_user, new_clients_ptr) == 0){
         return 0;
     }
-
+    //Checks for invalid usernames and notifies user if it is invalid
     if(strcmp(new_user->inbuf, "") == 0){
         char *empty_message = "Please enter a non empty username:\r\n";
         Write(new_user, empty_message, new_clients_ptr);
@@ -486,7 +495,7 @@ int read_new_client(struct client *new_user, struct client **active_clients_ptr,
         curr = curr->next;
     }
 
-    //if code reaches here then the username isn't taken. Return 1 to approve username
+    //if code reaches here then the username isn't taken. Set username. Return 1 to approve username
     strncpy(new_user->username, new_user->inbuf, strlen(new_user->inbuf));
     (new_user->username)[strlen(new_user->inbuf)] = '\0';
     return 1;
@@ -694,7 +703,7 @@ int main (int argc, char **argv) {
                 // Check if any new clients are entering their names
                 for (p = new_clients; p != NULL; p = p->next) {
                     if (cur_fd == p->fd) {
-                        // TODO: handle input from a new client who has not yet entered an acceptable name
+                        //Check if the clients username has been successfully read. If true, then proceed to activate
                         if(read_new_client(p,&active_clients, &new_clients)){
                             printf("Activating client...\n");
                             activate_client(p, &active_clients, &new_clients);
@@ -712,7 +721,7 @@ int main (int argc, char **argv) {
                     // Check if this socket descriptor is an active client
                     for (p = active_clients; p != NULL; p = p->next) {
                         if (cur_fd == p->fd) {
-                            // TODO: handle input from an active client
+                            // Deals with active user input.
                             active_user_input(&active_clients, p);
                             break;
                         }
