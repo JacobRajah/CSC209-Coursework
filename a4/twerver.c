@@ -310,6 +310,7 @@ void execute_command(struct client **active_clients_ptr, struct client *user, ch
         //2. store in message list
         if(index != -1){
             strncpy((user->message)[index], argument, strlen(argument));
+            (user->message)[index][strlen(argument)] = '\0';
             printf("[%s] Successfully saved the message to account\n", user->username);
             //3. send message to all followers
             send_followers(active_clients_ptr, user, argument);
