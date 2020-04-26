@@ -44,3 +44,5 @@ Insert Assignment information here
 * **Jacob Rajah**: wrote all code in this repository aside from starter code given by the instructors
 
 ## Acknowledgments
+All labs and assignments were created by the instructors for CSC209 at the University of Toronto. Most of the folders in this 
+repository contain starter code written by the Instructors. However, all the scripts were completed and made function by myself.
