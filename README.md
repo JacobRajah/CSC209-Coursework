@@ -1,6 +1,6 @@
 # CSC209-Coursework
 This repository contains all the labs and assignments completed in the course. The course was focused on 
-systems programming in a Unix environment using the programming language C. The main topics of the course were:
+systems programming in a Unix environment using the programming language C. The main topics of the course were: Pointers, Dynamic Memory, File Processing, Forking, Pipes and Sockets.
 
 ## Getting Started
 
