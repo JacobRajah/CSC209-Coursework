@@ -35,7 +35,7 @@ $ ./<exename>
 ```
 
 ## Labs
-Below is a list of goals for each lab:
+***Below is a list of goals for each lab:***
 ### Lab 1
 * write a simple script in order to demonstrate how to compile C files
 ### Lab 2
