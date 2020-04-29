@@ -64,7 +64,19 @@ period.
 * Learn how to deal with a server that has multiple clients using the select function in C
 
 ## Assignments
-Insert Assignment information here
+### Assignment 1: Benford's Law and the 2D Game of Life
+The goals of this assignment were to analyze the distribution of digits in a given dataset, and to produce a simple command line version of ***The Game of Life***. The main topics for the assignment were: processing data from the command line, arrays and command line arguments
+
+### Assignment 2: File Tree's
+The goal of this assignment was to collect information about a specified directory and its contents, and then display the information in the terminal in a way that best represents the organization of files in the directory (and all sub-directories). The main topics for this assignment were: file systems, structs, dynamic memory and pointers.
+
+### Asssignment 3: Processes and Pipes
+The goal of this lab was to use ***Fork*** to create multiple processes in order to solve a problem within an acceptable 
+Big-Oh time. The main task for this assignment was to calculate the smallest distance between to points in a system of points.
+The main topics of this assignment were: Fork, Pipes and exit status'
+
+### Assignment 4: Twitter Server
+The goal of this assignment was to make a mock twitter server where clients can connect and disconnect using the netcat function in the terminal. Clients are able to follow other clients, share messages to their followers and read messages that people they follow sent at any time. The purpose of this assignment was to work with select to ensure that the server never waits to read from any client, and thus never blocks. 
 
 ## Authors
 * **Jacob Rajah**: wrote all code in this repository aside from starter code given by the instructors
